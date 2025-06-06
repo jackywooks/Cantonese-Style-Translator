@@ -1,0 +1,6 @@
+{
+  "name": "Cantonese Style Translator",
+  "description": "A web application to translate Verbal Cantonese to Formal Traditional Chinese, using user-provided examples to match the desired style. Utilizes the Gemini API for translation.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
