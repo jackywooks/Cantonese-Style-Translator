@@ -27,11 +27,6 @@ ENV VITE_API_KEY=$VITE_API_KEY_BUILD
 # This command outputs static files to the 'dist' folder (default for Vite)
 RUN npm run build
 
-# TEMPORARY DEBUG STEPS: List contents of /app/dist BEFORE COPYING
-# You will find the output of these commands in your Cloud Build logs
-RUN ls -l /app/dist
-RUN ls -l /app/dist/assets
-
 # Stage 2: Serve the static files with a lightweight web server (e.g., Nginx)
 FROM nginx:alpine
 
