@@ -164,26 +164,8 @@ CONFIRMED=1 gh pr create ...
 
 ## 文檔結構
 
-```
-docs/
-├── INDEX.md              # 總入口(每次 session 必讀)
-├── active/               # 進行中嘅 features(plan + tasks)
-├── archive/              # 已完成 features
-├── review/
-│   ├── lessons.md        # Lessons learnt
-│   ├── feedback.md       # PM 偏好
-│   └── daily-progress.md # 每日自動記錄(GitHub Action)
-└── knowledge/            # 項目知識
-```
+**每次 session 開始先讀 `docs/INDEX.md`** — 佢係 docs/ 嘅總入口,放住目錄地圖、
+新 session 流程、新 feature 流程,同 route 去進行中嘅 features / lessons / feedback。
 
-### 新 session 流程
-1. 讀 `docs/INDEX.md`
-2. 讀 `docs/review/lessons.md`
-3. 讀 `docs/active/` 進行中嘅 features
-
-### 新 feature 流程
-1. PM 描述需求
-2. grep `review/lessons.md` 同 `archive/` 睇有冇類似
-3. 寫 plan 到 `docs/active/{feature}/plan.md`(scope、why、how、驗收標準、風險)
-4. 拆 tasks 到 `docs/active/{feature}/tasks.md`(明確、可驗證)
-5. PM 確認後動手
+呢個檔(CLAUDE.md)只負責工作流程紀律;docs/ 嘅結構同流程以 `docs/INDEX.md` 為準,
+唔喺度重覆,避免兩邊 drift。
