@@ -1,0 +1,54 @@
+# Auto-deploy on merge to main → Cloudflare Pages (free tier).
+#
+# Required GitHub repo secrets:
+#   CF_API_TOKEN   — Cloudflare API token with "Cloudflare Pages: Edit"
+#   CF_ACCOUNT_ID  — Cloudflare account id
+#   GEMINI_API_KEY — injected at build time (Vite bakes it into the bundle;
+#                    note: it becomes public in the deployed client — see
+#                    CLAUDE.md secrets caveat).
+#
+# One-time Cloudflare setup: create a Pages project named below
+# (`--project-name`) or let the first `wrangler pages deploy` create it.
+
+name: Deploy on merge to main
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # manual re-trigger if a deploy needs replaying
+
+# Serialise deploys: queue the next one rather than cancelling an in-flight build.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build + Cloudflare Pages deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        # vite.config.ts reads GEMINI_API_KEY via loadEnv (.env file), so
+        # write it to .env before building rather than relying on process.env.
+        run: |
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env
+          npm run build
+          rm -f .env
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=cantonese-style-translator --branch=main
