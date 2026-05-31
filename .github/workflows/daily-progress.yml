@@ -1,0 +1,54 @@
+name: Daily progress
+
+# Append a per-day summary of merged PRs to docs/review/daily-progress.md.
+# Skips silently when nothing shipped that day.
+
+on:
+  schedule:
+    # 03:17 UTC = 23:17 America/Toronto (EST) / 22:17 (EDT). Off-minute
+    # to avoid the GH Actions scheduler stampede at :00.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "YYYY-MM-DD (default: today in America/Toronto)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  write-progress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Write entry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            python scripts/write_daily_progress.py --date "${{ github.event.inputs.date }}"
+          else
+            python scripts/write_daily_progress.py
+          fi
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet docs/review/daily-progress.md 2>/dev/null && \
+             ! git status --porcelain docs/review/daily-progress.md | grep -q .; then
+            echo "No changes — skipping commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/review/daily-progress.md
+          git diff --cached --quiet && { echo "Nothing staged."; exit 0; }
+          git commit -m "chore(docs): daily progress $(date -u +%Y-%m-%d)"
+          git push

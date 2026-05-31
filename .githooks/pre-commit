@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Cantonese-Style-Translator pre-commit hook
+#
+# To install (one-time, per clone):
+#   git config core.hooksPath .githooks
+#
+# Placeholder: wire in fast static checks here once tooling exists.
+# Suggested once configured:
+#   - npm run lint   (eslint on staged files)
+#   - tsc --noEmit   (typecheck)
+#
+# Keep it FAST — pre-commit runs on every commit. Bypass in emergencies:
+#   git commit --no-verify
+
+set -e
+
+# --- placeholder: no checks wired yet ---
+# Example (uncomment + adapt once lint is configured):
+#
+# STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR \
+#     | grep -E '\.(ts|tsx)$' || true)
+# if [ -n "$STAGED_TS" ]; then
+#     npm run lint -- $STAGED_TS || {
+#         echo ""
+#         echo "Pre-commit aborted: fix the lint error(s) above, then"
+#         echo "re-stage and re-commit. Emergency bypass: git commit --no-verify"
+#         exit 1
+#     }
+# fi
+
+exit 0

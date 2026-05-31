@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, feature/**]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  build:
+    name: Build (vite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install deps
+        run: npm ci
+      # TODO: wire these in once tooling is configured (see CLAUDE.md §品質閘)
+      # - name: Lint
+      #   run: npm run lint
+      # - name: Typecheck
+      #   run: npx tsc --noEmit
+      # - name: Test
+      #   run: npm test
+      - name: Build
+        run: npm run build
