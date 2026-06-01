@@ -7,7 +7,13 @@ import { SentenceTable } from "../components/SentenceTable";
 export async function loader({ request, params }: Route.LoaderArgs) {
   await requireAuth(request);
   const id = Number(params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Response("Not found", { status: 404 });
+  }
   const translation = await getTranslation(id);
+  if (!translation) {
+    throw new Response("Not found", { status: 404 });
+  }
   const sentences = await getSentences(id);
   return { translation, sentences };
 }
@@ -21,14 +27,11 @@ export default function HistoryDetail() {
       </Link>
       <div className="bg-slate-800 p-6 rounded-lg">
         <h2 className="text-2xl font-semibold text-sky-300 mb-2">
-          Run {translation ? `#${translation.id}` : ""}
+          Run #{translation.id}
         </h2>
-        {translation && (
-          <p className="text-slate-400 text-sm mb-4">
-            <span className="text-slate-500">Input:</span>{" "}
-            {translation.input_text}
-          </p>
-        )}
+        <p className="text-slate-400 text-sm mb-4">
+          <span className="text-slate-500">Input:</span> {translation.input_text}
+        </p>
         {sentences.length === 0 ? (
           <p className="text-slate-400">No sentences found for this run.</p>
         ) : (

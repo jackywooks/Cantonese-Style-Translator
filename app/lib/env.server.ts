@@ -13,3 +13,19 @@ export interface AppEnv {
 }
 
 export const appEnv = env as unknown as AppEnv;
+
+/**
+ * Read a required secret/binding, throwing a clear error if it is missing
+ * rather than letting `undefined` flow into cookie crypto or the DB driver
+ * and surface later as a cryptic failure.
+ */
+export function requireEnv(key: keyof AppEnv): string {
+  const value = appEnv[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(
+      `Missing required environment value "${String(key)}". ` +
+        `Set it via \`wrangler secret put ${String(key)}\` (prod) or in .dev.vars (local).`,
+    );
+  }
+  return value;
+}
