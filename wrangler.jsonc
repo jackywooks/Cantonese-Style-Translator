@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cantonese-style-translator",
+  "compatibility_date": "2025-04-04",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./workers/app.ts",
+  "assets": {
+    "directory": "./build/client"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cantonese_translator",
+      "database_id": "PLACEHOLDER_REPLACE_AFTER_wrangler_d1_create",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
