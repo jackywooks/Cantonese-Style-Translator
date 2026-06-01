@@ -1,54 +1,53 @@
-# Auto-deploy on merge to main → Cloudflare Pages (free tier).
+# Auto-deploy on merge to main → Cloudflare Workers (free tier).
+#
+# React Router v7 deploys to Cloudflare Workers (static assets + SSR worker),
+# NOT Pages. `wrangler deploy` reads wrangler.jsonc (main = workers/app.ts,
+# assets = build/client, D1 binding DB).
 #
 # Required GitHub repo secrets:
-#   CF_API_TOKEN   — Cloudflare API token with "Cloudflare Pages: Edit"
+#   CF_API_TOKEN   — Cloudflare API token with "Workers Scripts: Edit" + "D1: Edit"
 #   CF_ACCOUNT_ID  — Cloudflare account id
-#   GEMINI_API_KEY — injected at build time (Vite bakes it into the bundle;
-#                    note: it becomes public in the deployed client — see
-#                    CLAUDE.md secrets caveat).
 #
-# One-time Cloudflare setup: create a Pages project named below
-# (`--project-name`) or let the first `wrangler pages deploy` create it.
+# Worker runtime secrets (set once via `wrangler secret put`, NOT here):
+#   GEMINI_API_KEY, APP_PASSWORD, SESSION_SECRET
+#
+# One-time before first deploy: `wrangler d1 create cantonese_translator` and
+# paste the database_id into wrangler.jsonc (replacing the PLACEHOLDER).
 
 name: Deploy on merge to main
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # manual re-trigger if a deploy needs replaying
+  workflow_dispatch:
 
-# Serialise deploys: queue the next one rather than cancelling an in-flight build.
 concurrency:
   group: deploy-main
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build + Cloudflare Pages deploy
+    name: Build + Cloudflare Workers deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-
       - name: Install deps
         run: npm ci
-
+      - name: Apply D1 migrations (remote)
+        run: npx wrangler d1 migrations apply cantonese_translator --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
       - name: Build
-        # vite.config.ts reads GEMINI_API_KEY via loadEnv (.env file), so
-        # write it to .env before building rather than relying on process.env.
-        run: |
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env
-          npm run build
-          rm -f .env
-
-      - name: Deploy to Cloudflare Pages
+        run: npm run build
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=cantonese-style-translator --branch=main
+          command: deploy
