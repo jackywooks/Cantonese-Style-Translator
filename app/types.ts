@@ -1,8 +1,3 @@
-export interface TranslationExample {
-  cantonese: string;
-  traditionalChinese: string;
-}
-
 export interface ExampleRow {
   id: number;
   cantonese: string;

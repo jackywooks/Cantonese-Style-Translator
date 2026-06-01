@@ -1,12 +1,7 @@
 import { Form, useLoaderData } from "react-router";
 import type { Route } from "./+types/manage";
 import { requireAuth } from "../lib/auth.server";
-import {
-  addExample,
-  deleteExample,
-  listExamples,
-  updateExample,
-} from "../lib/db.server";
+import { addExample, deleteExample, listExamples } from "../lib/db.server";
 
 export function meta() {
   return [{ title: "Examples · Cantonese Style Translator" }];
@@ -22,21 +17,20 @@ export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
   const intent = String(form.get("intent"));
   if (intent === "add") {
-    await addExample(
-      String(form.get("cantonese")),
-      String(form.get("traditional")),
-    );
-  } else if (intent === "edit") {
-    await updateExample(
-      Number(form.get("id")),
-      String(form.get("cantonese")),
-      String(form.get("traditional")),
-    );
+    const cantonese = String(form.get("cantonese") ?? "").trim();
+    const traditional = String(form.get("traditional") ?? "").trim();
+    if (cantonese && traditional) {
+      await addExample(cantonese, traditional);
+    }
   } else if (intent === "delete") {
-    await deleteExample(Number(form.get("id")));
+    const id = Number(form.get("id"));
+    if (Number.isInteger(id) && id > 0) {
+      await deleteExample(id);
+    }
   }
   return { ok: true };
 }
+
 
 export default function Manage() {
   const { examples } = useLoaderData<typeof loader>();

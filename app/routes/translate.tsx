@@ -1,29 +1,41 @@
-import { Form, useActionData, useNavigation } from "react-router";
+import { Form, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import type { Route } from "./+types/translate";
 import { requireAuth } from "../lib/auth.server";
 import { appEnv } from "../lib/env.server";
-import { getSentences, listExamples, saveTranslation } from "../lib/db.server";
+import {
+  getSentences,
+  getTranslation,
+  listExamples,
+  saveTranslation,
+} from "../lib/db.server";
 import { translateTextWithExamples } from "../lib/gemini.server";
 import { buildMarkedText, parseMarkers, splitSentences } from "../lib/sentences";
 import { SentenceTable } from "../components/SentenceTable";
+import { NO_TRANSLATION_PLACEHOLDER } from "../lib/constants";
 import type { SentenceRow } from "~/types";
-
-const PLACEHOLDER = "[No translation found for this segment]";
 
 export function meta() {
   return [{ title: "Translate · Cantonese Style Translator" }];
 }
 
+// The result is loaded (not returned from the action) so that per-sentence
+// edit/flag fetchers trigger a loader revalidation and the table reflects the
+// saved DB state instead of reverting to the original action payload.
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);
-  return {};
+  const url = new URL(request.url);
+  const idParam = url.searchParams.get("id");
+  const id = Number(idParam);
+  if (idParam && Number.isInteger(id) && id > 0) {
+    const translation = await getTranslation(id);
+    if (translation) {
+      return { sentences: await getSentences(id), input: translation.input_text };
+    }
+  }
+  return { sentences: [] as SentenceRow[], input: "" };
 }
 
-type ActionData =
-  | { error: string }
-  | { translationId: number; sentences: SentenceRow[] };
-
-export async function action({ request }: Route.ActionArgs): Promise<ActionData> {
+export async function action({ request }: Route.ActionArgs) {
   await requireAuth(request);
   const form = await request.formData();
   const input = String(form.get("input") ?? "").trim();
@@ -45,20 +57,20 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionData>
   const pairs = sentences.map((orig, i) => ({
     seq: i + 1,
     original: orig,
-    ai: byMarker[`[S:${i + 1}]`] || PLACEHOLDER,
+    ai: byMarker[`[S:${i + 1}]`] || NO_TRANSLATION_PLACEHOLDER,
   }));
 
-  const translationId = await saveTranslation(input, pairs);
-  const saved = await getSentences(translationId);
-  return { translationId, sentences: saved };
+  const { translationId } = await saveTranslation(input, pairs);
+  // Redirect to the loader-backed view so subsequent row edits revalidate.
+  return redirect(`/?id=${translationId}`);
 }
 
 export default function Translate() {
-  const data = useActionData<ActionData>();
+  const { sentences, input } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const nav = useNavigation();
   const busy = nav.state !== "idle";
-  const sentences = data && "sentences" in data ? data.sentences : [];
-  const error = data && "error" in data ? data.error : null;
+  const error = actionData && "error" in actionData ? actionData.error : null;
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
@@ -71,6 +83,7 @@ export default function Translate() {
           name="input"
           rows={8}
           required
+          defaultValue={input}
           placeholder="例如: 你食咗飯未呀？"
           className="w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-slate-100 resize-y"
         />

@@ -1,4 +1,5 @@
 import { useFetcher } from "react-router";
+import { NO_TRANSLATION_PLACEHOLDER } from "../lib/constants";
 import type { SentenceRow } from "~/types";
 
 export function SentenceTable({ sentences }: { sentences: SentenceRow[] }) {
@@ -14,13 +15,27 @@ export function SentenceTable({ sentences }: { sentences: SentenceRow[] }) {
 function SentenceRowItem({ s }: { s: SentenceRow }) {
   const editFetcher = useFetcher();
   const flagFetcher = useFetcher();
-  const promoteFetcher = useFetcher();
+  const promoteFetcher = useFetcher<{ ok: boolean; reason?: string }>();
 
+  // Optimistic flag state: reflect the in-flight submission, otherwise the
+  // (revalidated) server value.
   const flagged = flagFetcher.formData
     ? flagFetcher.formData.get("flagged") === "1"
     : s.flagged === 1;
 
-  const promoted = promoteFetcher.state !== "idle" || promoteFetcher.data;
+  const promoting = promoteFetcher.state !== "idle";
+  const promoteResult = promoteFetcher.data;
+  const promoteDone = Boolean(promoteResult?.ok);
+  const promoteRejected = promoteResult?.ok === false;
+  const canPromote =
+    s.translated.trim() !== "" &&
+    s.translated !== NO_TRANSLATION_PLACEHOLDER;
+
+  let promoteLabel = "Add to examples";
+  if (promoting) promoteLabel = "Adding…";
+  else if (promoteResult?.reason === "duplicate") promoteLabel = "✓ Already in examples";
+  else if (promoteDone) promoteLabel = "✓ Added to examples";
+  else if (promoteRejected) promoteLabel = "Can't add (placeholder)";
 
   return (
     <div
@@ -61,17 +76,19 @@ function SentenceRowItem({ s }: { s: SentenceRow }) {
           </button>
         </flagFetcher.Form>
 
-        <promoteFetcher.Form method="post" action="/api/examples">
-          <input type="hidden" name="intent" value="promote" />
-          <input type="hidden" name="cantonese" value={s.original_cantonese} />
-          <input type="hidden" name="traditional" value={s.translated} />
-          <button
-            disabled={Boolean(promoted)}
-            className="text-sky-300 hover:text-sky-200 disabled:text-slate-500"
-          >
-            {promoted ? "✓ Added to examples" : "Add to examples"}
-          </button>
-        </promoteFetcher.Form>
+        {canPromote && (
+          <promoteFetcher.Form method="post" action="/api/examples">
+            <input type="hidden" name="intent" value="promote" />
+            <input type="hidden" name="cantonese" value={s.original_cantonese} />
+            <input type="hidden" name="traditional" value={s.translated} />
+            <button
+              disabled={promoting || promoteDone}
+              className="text-sky-300 hover:text-sky-200 disabled:text-slate-500"
+            >
+              {promoteLabel}
+            </button>
+          </promoteFetcher.Form>
+        )}
 
         {s.edited === 1 && <span className="text-slate-500">edited</span>}
       </div>
