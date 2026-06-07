@@ -21,5 +21,6 @@ export interface SentenceRow {
 export interface TranslationRow {
   id: number;
   input_text: string;
+  direction: string;
   created_at: string;
 }

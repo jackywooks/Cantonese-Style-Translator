@@ -1,18 +1,25 @@
 import { useFetcher } from "react-router";
 import { NO_TRANSLATION_PLACEHOLDER } from "../lib/constants";
+import { DEFAULT_DIRECTION, type Direction } from "../lib/direction";
 import type { SentenceRow } from "~/types";
 
-export function SentenceTable({ sentences }: { sentences: SentenceRow[] }) {
+export function SentenceTable({
+  sentences,
+  direction = DEFAULT_DIRECTION,
+}: {
+  sentences: SentenceRow[];
+  direction?: Direction;
+}) {
   return (
     <div className="space-y-3">
       {sentences.map((s) => (
-        <SentenceRowItem key={s.id} s={s} />
+        <SentenceRowItem key={s.id} s={s} direction={direction} />
       ))}
     </div>
   );
 }
 
-function SentenceRowItem({ s }: { s: SentenceRow }) {
+function SentenceRowItem({ s, direction }: { s: SentenceRow; direction: Direction }) {
   const editFetcher = useFetcher();
   const flagFetcher = useFetcher();
   const promoteFetcher = useFetcher<{ ok: boolean; reason?: string }>();
@@ -79,8 +86,9 @@ function SentenceRowItem({ s }: { s: SentenceRow }) {
         {canPromote && (
           <promoteFetcher.Form method="post" action="/api/examples">
             <input type="hidden" name="intent" value="promote" />
-            <input type="hidden" name="cantonese" value={s.original_cantonese} />
-            <input type="hidden" name="traditional" value={s.translated} />
+            <input type="hidden" name="direction" value={direction} />
+            <input type="hidden" name="original" value={s.original_cantonese} />
+            <input type="hidden" name="translated" value={s.translated} />
             <button
               disabled={promoting || promoteDone}
               className="text-sky-300 hover:text-sky-200 disabled:text-slate-500"
