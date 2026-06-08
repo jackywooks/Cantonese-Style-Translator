@@ -1,13 +1,13 @@
 import { Form, redirect, useActionData, useLoaderData, useNavigation } from "react-router";
 import type { Route } from "./+types/translate";
 import { requireAuth } from "../lib/auth.server";
-import { appEnv } from "../lib/env.server";
 import {
   getSentences,
   getTranslation,
   listExamples,
   saveTranslation,
 } from "../lib/db.server";
+import { getGeminiApiKey, getGeminiModel } from "../lib/settings.server";
 import { translateTextWithExamples } from "../lib/gemini.server";
 import { buildMarkedText, parseMarkers, splitSentences } from "../lib/sentences";
 import { SentenceTable } from "../components/SentenceTable";
@@ -48,7 +48,11 @@ export async function action({ request }: Route.ActionArgs) {
   const examples = await listExamples();
   let output: string;
   try {
-    output = await translateTextWithExamples(appEnv.GEMINI_API_KEY, marked, examples);
+    const [apiKey, model] = await Promise.all([
+      getGeminiApiKey(),
+      getGeminiModel(),
+    ]);
+    output = await translateTextWithExamples(apiKey, marked, examples, model);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Translation failed." };
   }

@@ -56,6 +56,9 @@ export default function App() {
               <Link to="/history" className="text-sky-300 hover:text-sky-200">
                 History
               </Link>
+              <Link to="/settings" className="text-sky-300 hover:text-sky-200">
+                Settings
+              </Link>
             </nav>
           )}
           {authed && (

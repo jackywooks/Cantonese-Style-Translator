@@ -1,14 +1,14 @@
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import type { ExampleRow } from "~/types";
-
-const MODEL_NAME = "gemini-2.5-flash";
+import { DEFAULT_GEMINI_MODEL } from "./models";
 
 export async function translateTextWithExamples(
   apiKey: string,
   cantoneseTextWithMarkers: string,
   examples: ExampleRow[],
+  model: string = DEFAULT_GEMINI_MODEL,
 ): Promise<string> {
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+  if (!apiKey) throw new Error("Gemini API key is not configured.");
   if (!cantoneseTextWithMarkers.trim()) return "";
 
   const ai = new GoogleGenAI({ apiKey });
@@ -49,7 +49,7 @@ Formal Traditional Chinese Translation (with [S:N] markers):
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: MODEL_NAME,
+      model,
       contents: prompt,
       config: { temperature: 0.3 },
     });

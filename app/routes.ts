@@ -9,6 +9,7 @@ export default [
   route("login", "routes/login.tsx"),
   route("logout", "routes/logout.tsx"),
   route("manage", "routes/manage.tsx"),
+  route("settings", "routes/settings.tsx"),
   route("history", "routes/history.tsx"),
   route("history/:id", "routes/history.$id.tsx"),
   route("api/sentences/:id", "routes/api.sentences.$id.tsx"),
