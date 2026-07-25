@@ -20,3 +20,17 @@
 | ship · PR · 品質閘 · skills | `docs/workflow/qa-gates.md` |
 | git 規範 · branch · worktree | `docs/workflow/git.md` |
 | hook 被 block · 危險操作 bypass | `docs/workflow/hooks.md` |
+
+## Agent skills
+
+### Issue tracker
+
+Issues 放喺 GitHub Issues(`jackywooks/Cantonese-Style-Translator`),用 `gh` CLI 操作。見 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+用五個預設 canonical labels(needs-triage / needs-info / ready-for-agent / ready-for-human / wontfix)。見 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+Single-context:根目錄 `CONTEXT.md` + `docs/adr/`。見 `docs/agents/domain.md`。
