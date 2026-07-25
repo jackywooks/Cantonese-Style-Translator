@@ -71,10 +71,11 @@ export interface SavedPair {
 export async function saveTranslation(
   inputText: string,
   pairs: SavedPair[],
+  direction: string = "c2f",
 ): Promise<{ translationId: number; sentences: SentenceRow[] }> {
   const insertParent = db()
-    .prepare("INSERT INTO translations (input_text) VALUES (?)")
-    .bind(inputText);
+    .prepare("INSERT INTO translations (input_text, direction) VALUES (?, ?)")
+    .bind(inputText, direction);
   const sentenceStmt = db().prepare(
     "INSERT INTO translation_sentences (translation_id, seq, original_cantonese, ai_translated, translated) " +
       "VALUES ((SELECT id FROM translations ORDER BY id DESC LIMIT 1), ?, ?, ?, ?)",

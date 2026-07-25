@@ -1,0 +1,1 @@
+ALTER TABLE translations ADD COLUMN direction TEXT NOT NULL DEFAULT 'c2f';

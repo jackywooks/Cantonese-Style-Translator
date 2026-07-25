@@ -58,7 +58,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
     const model = await getGeminiModel();
     try {
-      const out = await translateTextWithExamples(key, "[S:1] 你好", [], model);
+      const out = await translateTextWithExamples(key, "[S:1] 你好", [], "c2f", model);
       return { ok: Boolean(out), message: "Key works ✓" };
     } catch (e) {
       // Sanitize: never echo the key back, even if an SDK error embedded it.
